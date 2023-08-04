@@ -1,4 +1,10 @@
 import { spawn } from 'node:child_process';
+import { updateState } from './db/db.js';
+
+const TAKE_OFF_MSG = process.argv[2];
+const PUT_ON_MSG = process.argv[3];
+const TEN_SECONDS = 1000 * 10;
+const FIVE_MINUTES = 1000 * 60 * 5;
 
 const getChargeLevel = (str) => {
   const tail = str.slice(str.indexOf('\t'));
@@ -19,30 +25,48 @@ const wait = (ms) => {
   });
 };
 
-const alert = () => {
-  const message = process.argv[2];
+const alert = (message) => {
   spawn('say', [message]);
 };
 
-function checkBatt() {
+const getChargingAndLevel = (data) => {
+  const status = data.toString();
+  const lines = status.split('\n');
+  // Will be either Battery or AC.
+  const charging = lines[0].includes('AC');
+  const chargeLevel = getChargeLevel(lines[1]);
+  return { charging, chargeLevel };
+};
+
+async function checkBatt(count) {
+  const userIsAway = count > 6;
+  const interval = userIsAway ? FIVE_MINUTES : TEN_SECONDS;
+
   const batt = spawn('pmset', ['-g', 'batt']);
 
   batt.stdout.on('data', async (data) => {
-    const status = data.toString();
-    const lines = status.split('\n');
-    // Will be either Battery or AC.
-    const charging = lines[0].includes('AC');
-    const chargeLevel = getChargeLevel(lines[1]);
-    // We're on the charger and at or above 80
-    // already. Trigger alert.
-    if (charging && chargeLevel >= 80) {
-      alert();
-      // Pause.
-      await wait(10000);
-      // Recurse.
-      checkBatt();
+    const { charging, chargeLevel } = getChargingAndLevel(data);
+    const takeOff = charging && chargeLevel >= 80;
+    const putOn = !charging && chargeLevel <= 20;
+
+    if (takeOff || putOn) {
+      if (count === 0) {
+        await updateState('active');
+      }
+      if (takeOff) {
+        alert(TAKE_OFF_MSG);
+      } else {
+        alert(PUT_ON_MSG);
+      }
+      await wait(interval);
+      checkBatt(count + 1);
     } else {
-      // Alert condition not met. Just log stats and exit.
+      // We're exiting after
+      // alerting.
+      if (count > 0) {
+        await updateState('inactive');
+        return;
+      }
       console.log(
         `Current charge stats: charging (${charging}), chargeLevel(${chargeLevel})\n`
       );
@@ -50,12 +74,12 @@ function checkBatt() {
   });
 
   batt.stderr.on('data', (err) => {
-    console.log(`batt error: ${err}`);
+    console.log(`Error running pmset -g batt:\n${err}`);
   });
 
   batt.on('close', (code) => {
     if (code !== 0) {
-      console.log(`batt process exited with code ${code}`);
+      console.log(`pmset -g batt process exited with non-zero code:\n${code}`);
     }
   });
 }
