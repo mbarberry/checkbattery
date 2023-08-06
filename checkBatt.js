@@ -3,8 +3,8 @@ import { updateState } from './db/db.js';
 
 const TAKE_OFF_MSG = process.argv[2];
 const PUT_ON_MSG = process.argv[3];
-const TEN_SECONDS = 1000 * 10;
-const FIVE_MINUTES = 1000 * 60 * 5;
+const SHORT_DELAY = 1000 * 30; // 30 seconds.
+const LONG_DELAY = 1000 * 60 * 10; // 10 minutes.
 
 const getChargeLevel = (str) => {
   const tail = str.slice(str.indexOf('\t'));
@@ -40,7 +40,7 @@ const getChargingAndLevel = (data) => {
 
 async function checkBatt(count) {
   const userIsAway = count > 6;
-  const interval = userIsAway ? FIVE_MINUTES : TEN_SECONDS;
+  const interval = userIsAway ? LONG_DELAY : SHORT_DELAY;
 
   const batt = spawn('pmset', ['-g', 'batt']);
 
