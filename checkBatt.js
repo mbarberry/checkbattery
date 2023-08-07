@@ -61,9 +61,8 @@ async function checkBatt(count) {
       await wait(interval);
       checkBatt(count + 1);
     } else {
-      // We're exiting after
-      // alerting.
       if (count > 0) {
+        console.log('Exiting after alerting.');
         await updateState('inactive');
         return;
       }
