@@ -1,5 +1,6 @@
 node_modules
 test
+db/dbInsertStatement.txt
 db/db.sqlite
 note.txt
 jobs.log

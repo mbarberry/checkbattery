@@ -51,6 +51,7 @@ async function checkBatt(count) {
 
     if (takeOff || putOn) {
       if (count === 0) {
+        console.log('Entering active state.');
         await updateState('active');
       }
       if (takeOff) {
@@ -62,7 +63,7 @@ async function checkBatt(count) {
       checkBatt(count + 1);
     } else {
       if (count > 0) {
-        console.log('Exiting after alerting.');
+        console.log('Updating state to inactive.');
         await updateState('inactive');
         return;
       }
