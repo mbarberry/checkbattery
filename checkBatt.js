@@ -39,17 +39,23 @@ const getChargingAndLevel = (data) => {
 };
 
 async function checkBatt(count) {
-  const userIsAway = count > 6;
+  console.log(`Running count #${count}.`);
+
+  const userIsAway = count >= 5;
   const interval = userIsAway ? LONG_DELAY : SHORT_DELAY;
 
   const batt = spawn('pmset', ['-g', 'batt']);
 
   batt.stdout.on('data', async (data) => {
     const { charging, chargeLevel } = getChargingAndLevel(data);
+    console.log(
+      `Current charge stats: charging (${charging}), chargeLevel(${chargeLevel})`
+    );
     const takeOff = charging && chargeLevel >= 80;
     const putOn = !charging && chargeLevel <= 20;
-
+    // An alert condition is met.
     if (takeOff || putOn) {
+      console.log(`Alert condition met. **${takeOff ? 'takeOff' : 'putOn'}**`);
       if (count === 0) {
         console.log('Entering active state.');
         await updateState('active');
@@ -62,14 +68,14 @@ async function checkBatt(count) {
       await wait(interval);
       checkBatt(count + 1);
     } else {
+      console.log('Alert condition NOT met.');
+      // An alert condition WAS met
+      // & is now fixed.
       if (count > 0) {
         console.log('Updating state to inactive.');
         await updateState('inactive');
         return;
       }
-      console.log(
-        `Current charge stats: charging (${charging}), chargeLevel(${chargeLevel})\n`
-      );
     }
   });
 
