@@ -1,5 +1,7 @@
 import { spawn } from 'node:child_process';
-import { updateState } from './db/db.js';
+import { updateState, getState } from './db/db.js';
+
+// TO DO: make this a class.
 
 const TAKE_OFF_MSG = process.argv[2];
 const PUT_ON_MSG = process.argv[3];
@@ -41,9 +43,12 @@ const getChargingAndLevel = (data) => {
 async function checkBatt(count) {
   console.log(`Running count #${count}.`);
 
+  // Adjust behavior if many alerts
+  // have already been played.
   const userIsAway = count >= 5;
   const interval = userIsAway ? LONG_DELAY : SHORT_DELAY;
 
+  // The actual shell command.
   const batt = spawn('pmset', ['-g', 'batt']);
 
   batt.stdout.on('data', async (data) => {
@@ -56,6 +61,8 @@ async function checkBatt(count) {
     // An alert condition is met.
     if (takeOff || putOn) {
       console.log(`Alert condition met. **${takeOff ? 'takeOff' : 'putOn'}**`);
+      // Running for the first time.
+      // Update state to active.
       if (count === 0) {
         console.log('Entering active state.');
         await updateState('active');
@@ -65,16 +72,18 @@ async function checkBatt(count) {
       } else {
         alert(PUT_ON_MSG);
       }
+      // Pause for timeout
+      // and recurse.
       await wait(interval);
       checkBatt(count + 1);
     } else {
-      console.log('Alert condition NOT met.');
-      // An alert condition WAS met
-      // & is now fixed.
-      if (count > 0) {
+      // Condition not met.
+      console.log('Alert condition not met.');
+      const isActive = (await getState()) === 'active';
+      // Update state to inactive.
+      if (isActive) {
         console.log('Updating state to inactive.');
         await updateState('inactive');
-        return;
       }
     }
   });
