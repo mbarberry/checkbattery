@@ -24,7 +24,7 @@ const MONTH_MAP = {
   11: 'December',
 };
 
-function timestamp() {
+export default function timestamp() {
   const now = new Date();
   const date = {
     year: now.getFullYear(),
@@ -36,5 +36,3 @@ function timestamp() {
   };
   return `${date.day} ${date.month} ${date.date} ${date.hour}:${date.minutes} ${date.year}`;
 }
-
-export default timestamp;

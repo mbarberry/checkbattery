@@ -1,8 +1,7 @@
 import { spawn } from 'node:child_process';
-import { updateState, getState } from './db/db.js';
+import { updateState, getState } from '../db/state.js';
 
 // TO DO: make this a class.
-
 const TAKE_OFF_MSG = process.argv[2];
 const PUT_ON_MSG = process.argv[3];
 const SHORT_DELAY = 1000 * 30; // 30 seconds.
