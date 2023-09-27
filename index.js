@@ -10,7 +10,7 @@ import timestamp from './src/utils.js';
 // (Cron outputs to log/jobs.log.)
 
 (async () => {
-  console.log(`${timestamp()} Battery checker job starting...`);
+  console.log(`\n\n${timestamp()} Battery checker job starting...`);
   const programState = await getState();
   if (programState === 'active') {
     console.log('...Already active. Proceeding to exit.');

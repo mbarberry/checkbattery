@@ -1,10 +1,14 @@
 {
-  "name": "check-batt",
-  "version": "1.1",
   "author": "Mike Barberry",
+  "name": "check-batt",
+  "main": "index.js",
+  "version": "1.1",
   "license": "GPL-3.0",
   "dependencies": {
     "sqlite3": "^5.1.6"
+  },
+  "engines": {
+    "node": "20.3.1"
   },
   "type": "module"
 }
