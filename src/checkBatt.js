@@ -1,9 +1,9 @@
 import { spawn } from 'node:child_process';
 import { updateState, getState } from '../db/state.js';
 
-const TAKE_OFF_LEVEL = process.argv[2];
+const TAKE_OFF_LEVEL = Number(process.argv[2]);
 const TAKE_OFF_MSG = process.argv[3];
-const PUT_ON_LEVEL = process.argv[4];
+const PUT_ON_LEVEL = Number(process.argv[4]);
 const PUT_ON_MSG = process.argv[5];
 const SHORT_DELAY = 1000 * 30; // 30 seconds.
 const LONG_DELAY = 1000 * 60 * 10; // 10 minutes.
