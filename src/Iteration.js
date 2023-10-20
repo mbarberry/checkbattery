@@ -1,6 +1,6 @@
 import { spawn } from 'node:child_process';
 
-import { updateState } from '../db/state.js';
+import { updateState, getState } from '../db/state.js';
 import CheckBattery from './CheckBattery.js';
 import {
   PUT_ON_MSG,
