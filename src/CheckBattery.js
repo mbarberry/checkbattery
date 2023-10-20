@@ -37,13 +37,13 @@ export default class CheckBattery {
       const iteration = new Iteration(this.iterationNum);
 
       try {
-        const { charging, chargeLevel } = await iteration.spawnPmset();
-        iteration.checkIfShouldAlert({ charging, chargeLevel });
+        const { shouldAlert, alertMessage } = iteration.alertCheck(
+          await iteration.spawnPmset()
+        );
 
-        if (iteration.shouldAlert) {
+        if (shouldAlert) {
           await iteration.alert({
-            alertType:
-              iteration.alertMessage === TAKE_OFF_MSG ? 'takeOff' : 'putOn',
+            alertType: alertMessage === TAKE_OFF_MSG ? 'takeOff' : 'putOn',
           });
           await wait(iteration.delay);
           this.iterationNum++;

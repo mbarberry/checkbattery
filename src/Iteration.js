@@ -17,8 +17,6 @@ export default class Iteration {
   constructor(iteration) {
     this.iteration = iteration;
     this.delay = iteration >= 5 ? LONG_DELAY : SHORT_DELAY;
-    this.shouldAlert = false;
-    this.alertMessage = null;
   }
 
   // Spawn pmset to retrieve
@@ -48,7 +46,12 @@ export default class Iteration {
 
   // Determine if we should alert.
   // Set some data if so.
-  checkIfShouldAlert({ charging, chargeLevel }) {
+  alertCheck({ charging, chargeLevel }) {
+    CheckBattery.log({
+      isFirst: false,
+      message: `charging: ${charging}, chargeLevel: ${chargeLevel}`,
+    });
+
     const takeOff = charging && chargeLevel >= 80;
     const putOn = !charging && chargeLevel <= 20;
 
@@ -57,17 +60,19 @@ export default class Iteration {
       message: `takeOff: ${takeOff}, putOn: ${putOn}`,
     });
 
+    let shouldAlert = false;
+    let alertMessage = null;
+
     if (takeOff || putOn) {
-      this.shouldAlert = true;
+      shouldAlert = true;
+      if (takeOff) {
+        alertMessage = TAKE_OFF_MSG;
+      } else {
+        alertMessage = PUT_ON_MSG;
+      }
     }
 
-    if (takeOff) {
-      this.alertMessage = TAKE_OFF_MSG;
-    }
-
-    if (putOn) {
-      this.alertMessage = PUT_ON_MSG;
-    }
+    return { shouldAlert, alertMessage };
   }
 
   // Update DB state if currently inactive.
