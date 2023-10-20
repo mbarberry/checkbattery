@@ -1,30 +1,8 @@
-const DAY_MAP = {
-  0: 'Sunday',
-  1: 'Monday',
-  2: 'Tuesday',
-  3: 'Wednesday',
-  4: 'Thursday',
-  5: 'Friday',
-  6: 'Saturday',
-  7: 'Sunday',
-};
+import { spawn } from 'node:child_process';
 
-const MONTH_MAP = {
-  0: 'January',
-  1: 'February',
-  2: 'March',
-  3: 'April',
-  4: 'May',
-  5: 'June',
-  6: 'July',
-  7: 'August',
-  8: 'September',
-  9: 'October',
-  10: 'November',
-  11: 'December',
-};
+import { DAY_MAP, MONTH_MAP } from './constants.js';
 
-export default function timestamp() {
+export const timestamp = () => {
   const now = new Date();
   const date = {
     year: now.getFullYear(),
@@ -35,4 +13,37 @@ export default function timestamp() {
     minutes: now.getMinutes(),
   };
   return `${date.day} ${date.month} ${date.date} ${date.hour}:${date.minutes} ${date.year}`;
-}
+};
+
+export const sayAlert = (message) => {
+  spawn('say', [message]);
+};
+
+export const wait = (ms) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve();
+    }, ms);
+  });
+};
+
+export const getChargeLevel = (str) => {
+  const tail = str.slice(str.indexOf('\t'));
+  let level = '';
+  let idx = 0;
+  while (idx < tail.length && tail[idx] !== '%') {
+    level += tail[idx];
+    idx++;
+  }
+  return Number(level);
+};
+
+// Charging is either: (1) "Battery", not charging, or
+// (2) "AC", is charging.
+export const getChargingAndLevel = (data) => {
+  const status = data.toString();
+  const lines = status.split('\n');
+  const charging = lines[0].includes('AC');
+  const chargeLevel = getChargeLevel(lines[1]);
+  return { charging, chargeLevel };
+};
