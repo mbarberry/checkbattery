@@ -1,6 +1,5 @@
 import { updateState, getState } from '../db/state.js';
 import Iteration from './Iteration.js';
-import { TAKE_OFF_MSG } from './constants.js';
 import { timestamp, wait } from './utils.js';
 
 // This class handles program flow
@@ -10,7 +9,10 @@ export default class CheckBattery {
   static on = true;
   static iterationNum = 0;
 
-  // Run if not already active.
+  // Main driver.
+  // Doesn't run main code if
+  // another process of this code is
+  // already running on the machine.
   static async main() {
     this.log({
       isFirst: true,
@@ -29,22 +31,18 @@ export default class CheckBattery {
     }
   }
 
-  // Alert, wait and run
-  // another iteration if
-  // a condition is met.
+  // Main functional logic.
+  // Keeps a while loop going as long as
+  // alert conditions keep getting met.
   static async run() {
     while (this.on) {
       const iteration = new Iteration(this.iterationNum);
 
       try {
-        const { shouldAlert, alertMessage } = iteration.alertCheck(
-          await iteration.spawnPmset()
-        );
+        iteration.alertCheck(await iteration.spawnPmset());
 
-        if (shouldAlert) {
-          await iteration.alert({
-            alertType: alertMessage === TAKE_OFF_MSG ? 'takeOff' : 'putOn',
-          });
+        if (iteration.alertMessage) {
+          await iteration.spawnAlert();
           await wait(iteration.delay);
           this.iterationNum++;
         } else {
@@ -58,7 +56,7 @@ export default class CheckBattery {
     await this.close();
   }
 
-  // Update DB state if currently active.
+  // Updates DB state before shutting off.
   static async close() {
     this.log({ isFirst: false, message: 'Alert condition not met.' });
 
@@ -71,6 +69,9 @@ export default class CheckBattery {
     }
   }
 
+  // Console log with an extra feature of
+  // adding an extra space for the first so
+  // telling between different runs is easy.
   static log({ isFirst, message }) {
     isFirst && console.log('\n');
     console.log(`Iteration #${this.iterationNum} --- ${message}`);

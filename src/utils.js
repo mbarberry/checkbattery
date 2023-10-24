@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 
 import { DAY_MAP, MONTH_MAP } from './constants.js';
 
+// Used for logging.
 export const timestamp = () => {
   const now = new Date();
   const date = {
@@ -15,10 +16,12 @@ export const timestamp = () => {
   return `${date.day} ${date.month} ${date.date} ${date.hour}:${date.minutes} ${date.year}`;
 };
 
+// Command that actually says the alerts.
 export const sayAlert = (message) => {
   spawn('say', [message]);
 };
 
+// Function to hold the program flow for a delay.
 export const wait = (ms) => {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -27,6 +30,7 @@ export const wait = (ms) => {
   });
 };
 
+// Parses charge level from pmset output.
 export const getChargeLevel = (str) => {
   const tail = str.slice(str.indexOf('\t'));
   let level = '';
@@ -38,6 +42,7 @@ export const getChargeLevel = (str) => {
   return Number(level);
 };
 
+// Main pmset parser.
 // Charging is either: (1) "Battery", not charging, or
 // (2) "AC", is charging.
 export const getChargingAndLevel = (data) => {

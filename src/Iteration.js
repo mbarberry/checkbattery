@@ -11,16 +11,19 @@ import {
 import { getChargingAndLevel, sayAlert } from './utils.js';
 
 // This class handles spawning
-// child processes and alerting.
+// child processes to get battery
+// details and say alerts (if appropriate).
 
 export default class Iteration {
   constructor(iteration) {
     this.iteration = iteration;
     this.delay = iteration >= 5 ? LONG_DELAY : SHORT_DELAY;
+    this.alertMessage = null;
   }
 
-  // Spawn pmset to retrieve
-  // charging / battery information.
+  // Pmset child process wrapped in a
+  // promise. Sends stdout to getChargingAndLevel
+  // that parses output to return { charging, chargeLevel }.
   spawnPmset() {
     return new Promise((resolve, reject) => {
       const pmset = spawn('pmset', ['-g', 'batt']);
@@ -44,8 +47,9 @@ export default class Iteration {
     });
   }
 
-  // Determine if we should alert.
-  // Set some data if so.
+  // Output from pmset promise passed here.
+  // Determines if we should alert.
+  // Sets correct alert message if so.
   alertCheck({ charging, chargeLevel }) {
     CheckBattery.log({
       isFirst: false,
@@ -60,27 +64,24 @@ export default class Iteration {
       message: `takeOff: ${takeOff}, putOn: ${putOn}`,
     });
 
-    let shouldAlert = false;
-    let alertMessage = null;
-
-    if (takeOff || putOn) {
-      shouldAlert = true;
-      if (takeOff) {
-        alertMessage = TAKE_OFF_MSG;
-      } else {
-        alertMessage = PUT_ON_MSG;
-      }
+    if (takeOff) {
+      this.alertMessage = TAKE_OFF_MSG;
     }
 
-    return { shouldAlert, alertMessage };
+    if (putOn) {
+      this.alertMessage = PUT_ON_MSG;
+    }
   }
 
-  // Update DB state if currently inactive.
-  // Spawn message to say alert.
-  async alert({ alertType }) {
+  // Spawn alert child process.
+  // Also update DB state if this is the
+  // first one.
+  async spawnAlert() {
     CheckBattery.log({
       isFirst: false,
-      message: `*Alert condition met: ${alertType}*`,
+      message: `*Alert condition met: ${
+        this.alertMessage === TAKE_OFF_MSG ? 'takeOff' : 'putOn'
+      }*`,
     });
 
     const isActive = (await getState()) === 'active';
