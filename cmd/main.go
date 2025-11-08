@@ -8,11 +8,12 @@ import (
 )
 
 func main() {
+	log.Printf("program started.")
 	b, err := battery.NewCheck()
 	if err != nil {
 		log.Fatalf("error initializing program: %v\n", err)
 	}
-	err := b.ParseLevel()
+	err = b.ParseLevel()
 	if err != nil {
 		log.Fatalf("error parsing charge level: %v\n", err)
 	}
@@ -22,4 +23,5 @@ func main() {
 	if !b.IsCharging() && b.Level < 20 {
 		speak.SayMessage("Put on charger.")
 	}
+	log.Printf("exiting.")
 }
