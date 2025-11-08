@@ -1,33 +1,22 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"os/exec"
-	"strconv"
-	"strings"
+	"log"
+
+	"checkbattery/internal/battery"
+	"checkbattery/internal/speak"
 )
 
 func main() {
-	cmd := exec.Command("pmset", "-g", "batt")
-	var out strings.Builder
-	cmd.Stdout = &out
-	err := cmd.Run()
+	b, err := battery.NewCheck()
 	if err != nil {
-		fmt.Printf("Error running command: %v", err)
-		os.Exit(1)
+		log.Fatalf("error initializing program: %v\n", err)
 	}
-	battLevel := out.String()
-	fmt.Printf("Pmset output is: %v\n", battLevel)
-	idx := strings.Index(battLevel, "\t")
-	if idx != -1 {
-		after := battLevel[idx+1:]
-		fmt.Printf("%v\n", after)
-		percent, err := strconv.Atoi(after[:2])
-		if err != nil {
-			fmt.Printf("Error extracting percent: %v", err)
-			os.Exit(1)
-		}
-		fmt.Printf("%v\n", percent)
+	b.ParseLevel()
+	if b.IsCharging() && b.Level > 80 {
+		speak.SayMessage("Take off charger.")
+	}
+	if !b.IsCharging() && b.Level < 20 {
+		speak.SayMessage("Put on charger.")
 	}
 }
