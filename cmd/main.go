@@ -12,7 +12,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("error initializing program: %v\n", err)
 	}
-	b.ParseLevel()
+	err := b.ParseLevel()
+	if err != nil {
+		log.Fatalf("error parsing charge level: %v\n", err)
+	}
 	if b.IsCharging() && b.Level > 80 {
 		speak.SayMessage("Take off charger.")
 	}
